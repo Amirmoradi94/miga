@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  scraper:
+    build: .
+    container_name: miga-scraper
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - ZYTE_API_KEY=${ZYTE_API_KEY}
+      - SCRAPING_DELAY=${SCRAPING_DELAY:-1}
+      - MAX_RETRIES=${MAX_RETRIES:-3}
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    container_name: miga-db
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-miga_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-miga_password}
+      - POSTGRES_DB=${POSTGRES_DB:-miga_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
